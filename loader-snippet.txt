@@ -1,0 +1,17 @@
+/* >>> userChrome.js loader (zen-tab-grid; undo = uninstall.bat, restores omni.ja.bak) <<< */
+try {
+  if (!window.__zenUserChromeLoaded) {
+    window.__zenUserChromeLoaded = true;
+    var chromeDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    chromeDir.append("chrome");
+    if (chromeDir.exists()) {
+      var rh = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
+      rh.setSubstitution("zenuserchrome", Services.io.newFileURI(chromeDir));
+      var jsFile = chromeDir.clone();
+      jsFile.append("userChrome.js");
+      if (jsFile.exists()) {
+        Services.scriptloader.loadSubScript("resource://zenuserchrome/userChrome.js", window, "UTF-8");
+      }
+    }
+  }
+} catch (e) { console.error("userChrome.js loader failed:", e); }

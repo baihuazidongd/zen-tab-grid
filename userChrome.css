@@ -1,0 +1,86 @@
+/* ============================================================
+   Zen 标签页网格：左侧栏多列显示 + 横向滚动（v5）
+   适用于 Zen Browser 1.22.x
+   ------------------------------------------------------------
+   ★ 调整参数（改数字后重启浏览器生效）：
+     --uc-grid-rows    一列显示几行。auto-fill = 按侧栏高度自动铺满（默认）
+                       也可以写固定数字，例如 8
+     --uc-grid-columns 每排显示几列（默认 2）
+     --uc-tab-h        单个标签高度（默认 36px）
+   ============================================================ */
+
+:root {
+  --uc-grid-rows: auto-fill;
+  --uc-grid-columns: 2;
+  --uc-tab-h: 36px;
+  --uc-grid-gap: 4px;
+}
+
+/* ---- 让标签滚动区纵向撑满侧栏 ----
+   auto-fill 的行数需要「确定的高度」才能算出来。
+   .zen-workspace-empty-space 自带 flex="1" 属性，会来分走剩余高度，
+   必须用 max-height 把它按住。 */
+.workspace-arrowscrollbox {
+  flex: 1 1 auto !important;
+}
+
+.zen-workspace-empty-space {
+  flex: 0 1 0px !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* ---- 普通标签区：Grid 按列填充，列满横向滚动 ----
+   仅在真的含标签时才网格化：空网格会因显式行模板占出大片空白。 */
+.zen-workspace-normal-tabs-section:has(> .tabbrowser-tab) {
+  flex: 1 1 auto !important;
+  display: grid !important;
+  grid-auto-flow: column !important;
+  grid-template-rows: repeat(var(--uc-grid-rows), var(--uc-tab-h)) !important;
+  grid-auto-columns: calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns)) !important;
+  gap: var(--uc-grid-gap) !important;
+  align-content: start !important;
+  justify-content: start !important;
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, currentColor 25%, transparent) transparent;
+}
+
+.zen-workspace-normal-tabs-section > .tabbrowser-tab {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  height: var(--uc-tab-h) !important;
+  align-self: start !important;
+}
+
+/* ---- 固定标签区：保持 Zen 原生样式（不网格化）----
+   固定标签是图标尺寸的小方块，且空置时网格会占位成空白。 */
+
+/* ---- 收起/展开状态兼容：侧栏折叠（图标模式）时不影响 ---- */
+/* 图标模式下标签区本身不可见，无需额外处理 */
+
+/* ---- 滚动条不占布局宽度，避免标签被挤压 ---- */
+.zen-workspace-tabs-section {
+  min-width: 0 !important;
+}
+
+/* ---- 已冻结（不在内存里）的标签：变灰 ----
+   tb-frozen 由 userChrome.js 标记 */
+tab[tb-frozen]:not([selected]) {
+  opacity: 0.62 !important;
+}
+
+tab[tb-frozen]:not([selected]) .tab-label,
+tab[tb-frozen]:not([selected]) .tab-icon-image,
+tab[tb-frozen]:not([selected]) .tab-throbber {
+  opacity: 0.5 !important;
+}
+
+/* 想在标题上加个雪花标记，取消下面这行的注释：
+tab[tb-frozen]:not([selected]) .tab-label::after { content: " ¼4"; opacity: .7; }
+*/
