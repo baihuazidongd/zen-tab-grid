@@ -1,8 +1,36 @@
-# Zen 标签页网格 + 滚轮横向翻页（zen-tab-grid）
+# zen-tab-grid
 
-把 Zen 浏览器左侧标签栏变成**多列网格**：标签先自上而下填满一列，满了自动开新列；滚轮在标签栏上**直接左右翻页**（不再是上下滚）；并且**已冻结（不在内存里）的标签会明显变灰**。
+给 **Zen 浏览器**的左侧标签栏补上三项原生没有的能力：**多列网格**、**普通滚轮横向翻页**、**冻结标签变灰**。
 
-在 **Zen Browser 1.22.3b / Windows 11** 上实测。
+面向 Zen 1.22.x / Windows。全部改动都是可逆的，不含任何联网上报。
+
+## Zen 原生是什么样，我们加了什么
+
+| | Zen 原生 | 装了本项目 |
+| --- | --- | --- |
+| 标签排布 | 单列，从上往下堆 | **多列网格**：先填满一列再开新列，行数随侧栏高度自动算 |
+| 标签多了怎么办 | 只能上下滚 | 超出容量时**横向排列**，滚轮**直接左右翻页** |
+| 滚轮手感 | 纵向滚（在标签栏上滚的是整条列表） | 一格滚轮 = 固定像素位移，**零动画、1:1 跟手**，可量化调节 |
+| 被冻结（卸载出内存）的标签 | **外观和正常标签一模一样**，看不出来 | **明显变灰**，可选加 ❄ 标记 |
+| 安装方式 | — | 一个 bat，自动定位安装目录与配置目录 |
+
+### 1. 多列网格
+
+Zen 1.22 把标签放进了每个工作区自己的容器里，官方 CSS 针对的旧结构已经失效，所以网上流传的"userChrome.css 多列标签"方案在 1.22 上基本都不生效。本项目按实际运行时结构重写，并处理了两个 Zen 特有的坑（见下面"原理"）。
+
+列数、行高、间距、行数全部可调；默认 `auto-fill` 让网格按侧栏高度自动铺满，**纵向不留空白**。
+
+### 2. 普通滚轮 = 横向翻页
+
+不需要按 Shift，也不需要触控板横扫：鼠标放在标签上滚，就是左右翻页。
+
+这一项**必须靠一小段浏览器内 JS** 才能实现（原因见"原理"第 4 条），所以安装器会给 Zen 的 `omni.ja` 追加一个极小的加载器。不想改二进制就用 `-NoPatch` 安装，网格和变灰照常生效，只少这一项。
+
+### 3. 冻结标签变灰
+
+**注意：本项目不负责"冻结"这个动作** —— 标签被卸载出内存由 Firefox 自身的自动冻结、会话恢复，或你自装的冻结类扩展完成。本项目解决的是它**看不见**的问题。
+
+原生情况下，一个已经被卸载（不占内存）的标签和一个活跃标签长得完全一样，你无法判断点下去要不要重新加载。装好后：未加载的标签整体变灰，点回去立刻恢复。
 
 ## 安装
 
@@ -10,22 +38,11 @@
 2. 右键 `install.bat` → **以管理员身份运行**
 3. 重新打开 Zen
 
-安装器会自动定位你的 Zen 安装目录和配置目录（读 `profiles.ini`），不需要填任何路径。
+不想改二进制：`powershell -File install.ps1 -NoPatch`（免管理员）。
 
-不想改二进制的话用 `powershell -File install.ps1 -NoPatch` —— 网格布局和冻结变灰照常生效，只有"普通滚轮左右翻"会失效（那一项需要加载器）。
+安装器会自动定位 Zen 安装目录和**你真正在用的那个配置目录**（Zen 会在 `profiles.ini` 里留一个 `Default=1` 的空壳配置，按默认标记找会装错地方，这里做了规避）。
 
-## 它会改你机器上的什么
-
-| 位置 | 改动 | 撤销方式 |
-| --- | --- | --- |
-| `<配置目录>\chrome\userChrome.css` | 新增（网格 + 变灰样式） | 删除该文件 |
-| `<配置目录>\chrome\userChrome.js` | 新增（滚轮 + 冻结标记） | 删除该文件 |
-| `<配置目录>\user.js` | 追加一行开关（否则 userChrome.css 不加载） | 删掉那两行 |
-| `<安装目录>\browser\omni.ja` | 在 `browser-main.js` 末尾追加十几行加载器；原文件先备份为 `omni.ja.bak` | 右键 `uninstall.bat` → 管理员运行 |
-
-不含任何联网上报，运行期只读本地文件。
-
-## 调参数
+## 配置
 
 改 `<配置目录>\chrome\userChrome.css` 顶部，重启 Zen 生效：
 
@@ -38,34 +55,44 @@
 }
 ```
 
-改滚轮手感：`<配置目录>\chrome\userChrome.js` 里
+改滚轮步长：`<配置目录>\chrome\userChrome.js`
 
 ```js
 const PX_PER_LINE = 16;   // 一格滚轮 ≈ 48px；调小更细腻，调大更快
 ```
 
-改变灰程度：`userChrome.css` 末尾的 `opacity` 数字（想加 ❄ 标记就取消那段注释）。
+改变灰程度 / 加 ❄：`userChrome.css` 末尾的 `opacity` 数字，以及那段注释掉的 `::after`。
 
-## 更新
+## 更新与卸载
 
-右键 `update.bat`。它会从本仓库拉最新文件并重装 CSS/JS；如果检测到 Zen 刚自动更新过（二进制补丁被覆盖），会提示你再跑一次 `install.bat`（那步需要管理员）。
+- **更新**：右键 `update.bat`。从本仓库拉最新文件并重装 CSS/JS；同时会自检 `omni.ja` 补丁是否还在（Zen 自动更新会把它冲掉），缺失时提示你重跑 `install.bat`。
+- **卸载**：右键 `uninstall.bat` → 管理员运行，还原安装前的 `omni.ja` 备份。要彻底回到原状，再删掉配置目录下的 `chrome\userChrome.css`、`chrome\userChrome.js`，以及 `user.js` 里本项目追加的那两行。
 
-## 原理（为什么普通 CSS 做不到，以及为什么之前一堆方案失效）
+## 它会改动你机器上的什么
 
-1. **Zen 1.22 的工作区机制把标签搬走了。** 官方 CSS 针对的 `#tabbrowser-arrowscrollbox` 已经不是标签的父级；标签实际在 `zen-workspace` 内部的 `.zen-workspace-normal-tabs-section` 里。网上针对旧结构写的 userChrome.css 全部无效。
-2. **userChrome.css 不能用 `::part()` 穿透 shadow DOM**（Firefox 禁止用户级样式表穿透），所以任何要改 arrowscrollbox 内部滚动的方案都不可行。本方案完全基于 light DOM。
-3. **空网格也会占位。** `grid-template-rows: repeat(8, 36px)` 的 8 条显式轨道即使格子里没东西也会实体化。所以固定标签区不做网格化，普通标签区也加了 `:has(> .tabbrowser-tab)` 守卫，否则顶部会出现一大片空白。
-4. **普通滚轮无法用 CSS 变成横向。** 浏览器按物理方向派发滚轮增量，纵向增量只会找纵向可滚容器；而 Zen 的模组系统是纯 CSS（`ZenMods.mjs` 只有 Stylesheet service），扩展也进不了 `browser.xhtml`。所以这里给 `omni.ja` 加了一个极小加载器，让 Zen 启动时用 `loadSubScript` 读配置目录里的 `userChrome.js`，由它把滚轮增量直接写成 `scrollLeft +=`（零动画，所以跟手）。
-5. **冻结的标签原本没有任何可视标记。** Firefox 只在**强制**卸载时才打 `discarded` 属性（`if (aForceDiscard) tab.toggleAttribute("discarded", true)`），而扩展的 `tabs.discard()` 走的是不传 force 的路径 —— 冻结其实成功了（`<browser>` 元素确实被销毁），但标签上没有任何属性可挂样式。现在由 `userChrome.js` 自己识别"browser 未连上文档"的标签并打 `tb-frozen`。
+| 位置 | 改动 | 撤销 |
+| --- | --- | --- |
+| `<配置目录>\chrome\userChrome.css` | 新增 | 删除文件 |
+| `<配置目录>\chrome\userChrome.js` | 新增 | 删除文件 |
+| `<配置目录>\user.js` | 追加一行开关（不打开则 userChrome.css 完全不加载） | 删掉那两行 |
+| `<安装目录>\browser\omni.ja` | 在 `browser-main.js` 末尾追加十几行加载器；原文件先备份为 `omni.ja.bak` | `uninstall.bat` |
+
+## 原理（为什么原生 CSS 做不到这些）
+
+1. **Zen 1.22 把工作区标签搬走了。** 标签的实际父级是 `zen-workspace` 内部的 `.zen-workspace-normal-tabs-section`，不再是官方 CSS 针对的 `#tabbrowser-arrowscrollbox`。
+2. **userChrome.css 不能用 `::part()` 穿透 shadow DOM**（Firefox 禁止用户级样式表穿透），所以任何要改 arrowscrollbox 内部滚动的方案都不可行。本项目全部基于 light DOM。
+3. **空网格也会占位。** `grid-template-rows: repeat(8, 36px)` 的 8 条显式轨道即使格子里没内容也会实体化高度。所以固定标签区不做网格化，普通标签区加 `:has(> .tabbrowser-tab)` 守卫 —— 否则顶部会凭空出现一大片空白。
+4. **普通滚轮无法用 CSS 变成横向。** 浏览器按物理方向派发滚轮增量，纵向增量只会去找纵向可滚容器；而 Zen 的模组系统是纯 CSS（`ZenMods.mjs` 只有 Stylesheet service），扩展也进不了 `browser.xhtml`。所以用 `omni.ja` 里的加载器 + `loadSubScript` 读配置目录的 JS，把滚轮增量直接写成 `scrollLeft +=`（不经任何动画，所以跟手）。
+5. **冻结标签原本没有任何可样式化的标记。** Firefox 只在**强制**卸载时才打 `discarded` 属性（`if (aForceDiscard) tab.toggleAttribute("discarded", true)`），而扩展 API `tabs.discard()` 走的是不传 force 的路径 —— 冻结确实成功了（`<browser>` 元素被销毁、内存释放），但标签上不留痕迹。本项目自己识别"browser 未连上文档"的标签并打 `tb-frozen`。
 
 ## 已知限制
 
-- **Zen 自动更新会覆盖 `omni.ja`**，表现为"滚轮又变成上下滚"。重跑 `install.bat` 即可（幂等，只补那一处，不会把 omni.ja 别的内容回退）。
+- **Zen 自动更新会覆盖 `omni.ja`**，表现为"滚轮又变成上下滚"。重跑 `install.bat` 即可（幂等，只补那一处，不会把 omni.ja 的其它内容回退）。
 - 标签**拖拽排序**在网格下按网格位置落点，跨列拖拽偶尔要两次。
 - 「新建标签页」按钮本身是标签区的子元素，会占掉第一个格子。
 - 会话恢复后还没点开过的标签也会显示为灰 —— 它们本来就不在内存里，属正常。
-- 需要 `browser.tabs.discard()` 能正常工作的环境（Zen 1.22.x 实测可以）。
+- 只在 Windows 上测试过（Zen 1.22.3b / Win11）；macOS/Linux 的路径定位需要另写。
 
 ## 版本
 
-- 1.0.0 首发：网格布局 + 滚轮横向翻页 + 冻结可视化
+- **v1.0.0** 多列网格 + 滚轮横向翻页 + 冻结标签变灰
