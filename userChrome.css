@@ -69,6 +69,46 @@
   align-self: start !important;
 }
 
+/* ---- 原生标签组（tab-group）在网格里 ----
+   gBrowser.addTabGroup() 建的组落在普通标签区（正是「文件夹显示在标签下方」要的位置），
+   但它是「一个格子装 n 个子标签」：高度超出 36px 轨道就压到下一格（实测 siteB 的标题
+   直接盖住了选中标签）。轨道数只有 JS 知道，所以 grid-row: span N 由 userChrome.js 写入。 */
+.zen-workspace-normal-tabs-section > tab-group {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  align-self: start !important;
+}
+
+/* 标题行也占一整格高，组的总高度才正好等于 (1 + 子标签数) 条轨道 */
+.zen-workspace-normal-tabs-section > tab-group > .tab-group-label-container {
+  width: 100% !important;
+  height: var(--uc-tab-h) !important;
+  margin: 0 !important;
+}
+
+/* tab-group 本身是 display:contents（实测），所以真正的网格项目是它的
+   「标题行」和「子标签容器」两块 —— grid-row: span N 必须写在容器上，
+   写在 tab-group 上会被忽略（第一版就栽在这里：span 设了但完全没生效）。 */
+.zen-workspace-normal-tabs-section > tab-group > .tab-group-container {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.zen-workspace-normal-tabs-section > tab-group .tabbrowser-tab {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: var(--uc-tab-h) !important;
+  margin: 0 !important;
+}
+
 /* ---- 文件夹（zen-folder）与标签同宽 ----
    文件夹是「固定标签容器」的子元素（gZenFolders.createFolder 会把里面的标签全部 pinTab），
    原生把它撑成整条侧栏（实测 495），而网格标签只有 245 —— 于是上面一条横的、下面两列。
@@ -93,6 +133,26 @@
 
 /* ---- 收起/展开状态兼容：侧栏折叠（图标模式）时不影响 ---- */
 /* 图标模式下标签区本身不可见，无需额外处理 */
+
+/* ---- 整理完的一行提示（userChrome.js 里 id=uc-toast 的那个 hbox） ---- */
+#uc-toast {
+  position: fixed !important;
+  left: 14px;
+  bottom: 20px;
+  z-index: 100000;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+#uc-toast[showing] {
+  opacity: 1;
+}
 
 /* ---- 滚动条不占布局宽度，避免标签被挤压 ---- */
 .zen-workspace-tabs-section {
