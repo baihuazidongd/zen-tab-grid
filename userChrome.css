@@ -69,8 +69,27 @@
   align-self: start !important;
 }
 
-/* ---- 固定标签区：保持 Zen 原生样式（不网格化）----
-   固定标签是图标尺寸的小方块，且空置时网格会占位成空白。 */
+/* ---- 文件夹（zen-folder）与标签同宽 ----
+   文件夹是「固定标签容器」的子元素（gZenFolders.createFolder 会把里面的标签全部 pinTab），
+   原生把它撑成整条侧栏（实测 495），而网格标签只有 245 —— 于是上面一条横的、下面两列。
+   这里用与标签**同一个公式**算宽度，改 --uc-grid-columns / --uc-grid-gap 时两边永远同步。
+   容器改成 row wrap 才能两个文件夹并排；固定标签本身强制 100%，仍然一行一个，不受影响。 */
+.zen-workspace-pinned-tabs-section {
+  flex-flow: row wrap !important;
+  align-content: flex-start !important;
+}
+
+.zen-workspace-pinned-tabs-section > tab.tabbrowser-tab,
+.zen-workspace-pinned-tabs-section > .pinned-tabs-container-separator,
+.zen-workspace-pinned-tabs-section > .zen-tab-group-start {
+  width: 100% !important;
+}
+
+.zen-workspace-pinned-tabs-section > zen-folder {
+  width: calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns)) !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
 
 /* ---- 收起/展开状态兼容：侧栏折叠（图标模式）时不影响 ---- */
 /* 图标模式下标签区本身不可见，无需额外处理 */
