@@ -34,13 +34,23 @@ Zen 1.22 把标签放进了每个工作区自己的容器里，官方 CSS 针对
 
 ## 安装
 
-1. **完全退出 Zen**（菜单 → 退出，不是关窗口）
-2. 右键 `install.bat` → **以管理员身份运行**
-3. 重新打开 Zen
+**下载 `zen-tab-grid.exe`，双击运行，选 1。** 它会自动定位 Zen 安装目录和你真正在用的配置目录 → 装好 CSS/JS → 需要写 `Program Files` 时自己弹 UAC 提权 → 备份 `omni.ja` 后再打补丁。全程不用填路径、不用解压、不用装任何依赖。
 
-不想改二进制：`powershell -File install.ps1 -NoPatch`（免管理员）。
+然后**完全退出 Zen（菜单 → 退出）再打开**即生效。
 
-安装器会自动定位 Zen 安装目录和**你真正在用的那个配置目录**（Zen 会在 `profiles.ini` 里留一个 `Default=1` 的空壳配置，按默认标记找会装错地方，这里做了规避）。
+| 菜单项 | 作用 |
+| --- | --- |
+| 1 完整安装 | 三项功能全开（会请求管理员权限） |
+| 2 仅装样式 | 免管理员；有网格 + 冻结变灰，滚轮仍是上下滚 |
+| 3 检查并更新 | 从仓库拉最新 CSS/JS 重装，并自检补丁是否被 Zen 更新冲掉 |
+| 4 卸载补丁 | 还原 `omni.ja.bak` |
+
+命令行也能用：`zen-tab-grid.exe --install | --style-only | --update | --uninstall | --status`
+
+**SmartScreen 拦你怎么办**（未签名 exe 的常见情况）：点弹窗里的「更多信息」→「仍要运行」。不想用 exe 的话，仓库里的 `install.bat`（右键 → 以管理员身份运行）效果完全一样；exe 的源码就在 `src\Program.cs`，想自己编译跑 `src\build.cmd` 即可（只用 Windows 自带的 csc.exe，无第三方依赖）。
+
+> Zen 会在 `profiles.ini` 里留一个带 `Default=1` 的空壳配置目录，按"默认标记"找会装错地方 —— 安装器改用 `[Install<hash>]` 里的真实路径，并以 `prefs.js` 的写入时间兜底。
+
 
 ## 配置
 
@@ -65,8 +75,9 @@ const PX_PER_LINE = 16;   // 一格滚轮 ≈ 48px；调小更细腻，调大更
 
 ## 更新与卸载
 
-- **更新**：右键 `update.bat`。从本仓库拉最新文件并重装 CSS/JS；同时会自检 `omni.ja` 补丁是否还在（Zen 自动更新会把它冲掉），缺失时提示你重跑 `install.bat`。
-- **卸载**：右键 `uninstall.bat` → 管理员运行，还原安装前的 `omni.ja` 备份。要彻底回到原状，再删掉配置目录下的 `chrome\userChrome.css`、`chrome\userChrome.js`，以及 `user.js` 里本项目追加的那两行。
+- **更新**：双击 exe 选 3（或右键 `update.bat`）。从本仓库拉最新文件并重装 CSS/JS；同时会自检 `omni.ja` 补丁是否还在（Zen 自动更新会把它冲掉），缺失时提示你重装补丁。
+- **卸载**：双击 exe 选 4（或右键 `uninstall.bat` → 管理员运行），还原安装前的 `omni.ja` 备份。要彻底回到原状，再删掉配置目录下的 `chrome\userChrome.css`、`chrome\userChrome.js`，以及 `user.js` 里本项目追加的那两行。
+
 
 ## 它会改动你机器上的什么
 
