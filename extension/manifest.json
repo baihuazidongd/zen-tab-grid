@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "标签页管家 — 整理 & 冻结",
+  "version": "1.0.0",
+  "description": "一键整理（按网站分组排序）、关闭重复标签页；自动冻结超过设定时间（默认 60 秒）未使用的标签页，尽最大可能释放内存。",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["tabs", "storage", "menus"],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_title": "标签页管家",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tab-butler@coocaa.addon",
+      "strict_min_version": "115.0"
+    }
+  }
+}

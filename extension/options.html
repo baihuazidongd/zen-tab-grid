@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>标签页管家 — 设置</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="options-page">
+  <h1>标签页管家 · 设置</h1>
+
+  <div class="card">
+    <h2>自动冻结</h2>
+    <label class="check"><input type="checkbox" id="autoEnabled"> 开启自动冻结（后台每 10 秒检查一次）</label>
+    <div class="field">
+      <label for="thresholdSeconds">冻结阈值</label>
+      <div class="inline">
+        <input type="number" id="thresholdSeconds" min="5" max="86400" step="1">
+        <span>标签页连续未使用多少秒后自动冻结</span>
+      </div>
+      <p class="hint">冻结（discard）会把标签页从内存中卸载，标签仍留在标签栏上，点击时自动重新加载。默认 60 秒，最小 5 秒。</p>
+    </div>
+    <label class="check"><input type="checkbox" id="excludePinned"> 固定的标签页不冻结</label>
+    <label class="check"><input type="checkbox" id="excludeAudible"> 正在播放声音的标签页不冻结</label>
+    <div class="field">
+      <label for="whitelist">白名单（这些网站的标签页永不冻结，每行一个域名）</label>
+      <textarea id="whitelist" rows="4" placeholder="例如：&#10;mail.example.com&#10;github.com"></textarea>
+      <p class="hint">填写主域名即可，自动匹配其所有子域名。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>快捷操作</h2>
+    <button id="freezeNow">❄️ 立即冻结所有不活跃标签页</button>
+    <p class="hint">只保留当前正在浏览的标签页处于加载状态，其余（固定/有声/白名单除外）全部冻结。</p>
+  </div>
+
+  <div class="actions">
+    <button id="save" class="primary">保存设置</button>
+    <button id="reset">恢复默认</button>
+    <span id="saved" class="msg"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

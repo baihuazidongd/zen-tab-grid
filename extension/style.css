@@ -1,0 +1,107 @@
+:root {
+  --bg: #14161b;
+  --card: #1d2027;
+  --border: #2c313d;
+  --text: #e8eaee;
+  --muted: #9aa2ad;
+  --accent: #5b54f0;
+  --accent-2: #4f46e5;
+  --ok: #7ddb8a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 330px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.55 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+body.options-page { width: auto; max-width: 660px; margin: 0 auto; padding: 20px 16px 40px; }
+
+h1 { font-size: 15px; font-weight: 600; margin: 0; padding: 14px 16px 2px; }
+h2 { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--muted); }
+
+.stats { padding: 0 16px 10px; color: var(--muted); font-size: 12px; }
+
+button {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 6px 16px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:active { transform: translateY(1px); }
+button.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  font-weight: 600;
+}
+button.link {
+  display: inline-block;
+  width: auto;
+  margin: 2px 16px 12px;
+  padding: 2px 4px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 10px 16px; }
+
+.row { display: flex; align-items: center; gap: 8px; padding: 4px 16px; }
+.row .secs { width: 64px; }
+
+.check { display: flex; align-items: flex-start; gap: 8px; padding: 4px 16px; cursor: pointer; }
+.check.compact { padding: 0; }
+.check input { margin-top: 3px; }
+
+.muted { color: var(--muted); }
+
+.msg { min-height: 18px; padding: 2px 16px 0; color: var(--ok); font-size: 12px; }
+
+/* ---- 设置页 ---- */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+body.options-page h1 { padding: 0; }
+body.options-page .check, body.options-page .field { padding-left: 0; }
+body.options-page .card .msg { padding-left: 0; }
+
+.field { margin: 10px 0; }
+.field label { display: block; margin-bottom: 4px; }
+.inline { display: flex; align-items: center; gap: 8px; }
+
+input[type="number"], textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 8px;
+  font: inherit;
+}
+textarea { width: 100%; resize: vertical; }
+input[type="number"]:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+.hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+
+.actions { display: flex; align-items: center; gap: 10px; }
+.actions button { width: auto; margin: 0; padding: 9px 18px; }
+.actions .msg { padding: 0; }

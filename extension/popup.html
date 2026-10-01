@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>标签页管家</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🗂️ 标签页管家</h1>
+  <div id="stats" class="stats">…</div>
+  <button id="organize" class="primary">✨ 一键整理标签页（按网站分组排序）</button>
+  <button id="dedupe">🧹 关闭重复标签页</button>
+  <button id="freezeNow">❄️ 立即冻结不活跃标签页</button>
+  <div class="divider"></div>
+  <div class="row">
+    <label class="check compact"><input type="checkbox" id="auto"> 自动冻结</label>
+    <span class="muted">超过</span>
+    <input type="number" id="secs" min="5" max="86400" step="1" class="secs">
+    <span class="muted">秒未使用</span>
+  </div>
+  <div id="msg" class="msg"></div>
+  <button id="openOptions" class="link">⚙️ 详细设置…</button>
+  <script src="popup.js"></script>
+</body>
+</html>
