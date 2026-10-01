@@ -47,6 +47,17 @@
   overflow-x: auto !important;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, currentColor 25%, transparent) transparent;
+  /* 新标签按钮（实测 242×36，是真的显示出来的 + 号）在网格里只占第一列的第 0 格，
+     于是第二列整列比第一列高一格。把它挪出流、铺满顶部一条，各列就都在同一行起头。 */
+  position: relative !important;
+  padding-top: calc(var(--uc-tab-h) + var(--uc-grid-gap)) !important;
+}
+
+.zen-workspace-normal-tabs-section > #tabbrowser-arrowscrollbox-periphery {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
 }
 
 .zen-workspace-normal-tabs-section > .tabbrowser-tab {
@@ -81,6 +92,6 @@ tab[tb-frozen]:not([selected]) .tab-throbber {
   opacity: 0.5 !important;
 }
 
-/* 想在标题上加个雪花标记，取消下面这行的注释：
-tab[tb-frozen]:not([selected]) .tab-label::after { content: " ¼4"; opacity: .7; }
+/* 想在标题上加个雪花标记，取消下面这行的注释（\2744 = ❄）：
+tab[tb-frozen]:not([selected]) .tab-label::after { content: " \2744"; opacity: .7; }
 */

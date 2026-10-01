@@ -34,6 +34,55 @@
   );
 })();
 
+/* ---- 网格里的拖拽落点 ----
+ * Zen 用「沿单轴的区间二分搜索」决定拖到哪个标签旁边（drag-and-drop.js 的 getOverlappedElement）。
+ * 两列网格里 screenY 不再随标签序号单调，实测：指针停在第二列的 20/22/24 号标签上，
+ * 算出来的落点却是 0/1/3，指示线永远画在第一列 —— 于是看起来「只能拖到第一列」。
+ * Zen 自己留了条捷径：dragover 命中的元素如果带 .zen-drop-target，就直接拿它当落点，
+ * 前/后半区由指针在该标签内的纵向位置决定 —— 列优先网格恰好就是这个轴。
+ * 实测补上这个类之后 20→20、22→22、24→24，指示线自动移到第二列，不需要重写整套拖拽。 */
+(() => {
+  if (window.__zenGridDropTarget) return;
+  window.__zenGridDropTarget = true;
+
+  const DROP = "zen-drop-target";
+
+  function gridColumnCount(s) {
+    const v = getComputedStyle(s).gridTemplateColumns;
+    if (!v || v === "none") return 1;
+    return v.split(/\s+/).filter(Boolean).length;
+  }
+
+  function sync() {
+    if (!window.gBrowser) return;
+    const inGrid = new Set();
+    for (const s of document.querySelectorAll(".zen-workspace-normal-tabs-section")) {
+      if (gridColumnCount(s) < 2) continue;             // 单列时原生算法本来就是对的，别多事
+      for (const t of s.querySelectorAll(":scope > tab")) {
+        if (t.pinned || t.hasAttribute("zen-essential") || t.group) continue;  // 固定/组内标签走原生（文件夹落点语义不变）
+        t.classList.add(DROP);
+        inGrid.add(t);
+      }
+    }
+    for (const t of gBrowser.tabs) if (!inGrid.has(t)) t.classList.remove(DROP);
+  }
+
+  function init() {
+    if (!window.gBrowser || !gBrowser.tabContainer) {
+      setTimeout(init, 200);
+      return;
+    }
+    const tc = gBrowser.tabContainer;
+    ["TabOpen", "TabClose", "TabMove", "SSTabRestored"].forEach((ev) => tc.addEventListener(ev, sync));
+    new MutationObserver(sync).observe(document.documentElement, {
+      subtree: true, childList: true, attributes: true, attributeFilter: ["group", "pinned", "zen-essential", "hidden"]
+    });
+    setInterval(sync, 1000);
+    sync();
+  }
+  init();
+})();
+
 /* ---- 冻结标签的可视化 ----
    Firefox 只在强制卸载时才打 discarded 属性，而扩展走的 tabs.discard() 不传 force，
    所以这里自己识别「不在内存里」的标签（browser 未连上文档 = 已卸载），
