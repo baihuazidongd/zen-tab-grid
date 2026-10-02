@@ -107,7 +107,12 @@
 /* tab-group 本身是 display:contents（实测），所以真正的网格项目是它的
    「标题行」和「子标签容器」两块 —— grid-row: span N 必须写在容器上，
    写在 tab-group 上会被忽略（第一版就栽在这里：span 设了但完全没生效）。 */
-.zen-workspace-normal-tabs-section > tab-group > .tab-group-container {
+/* 只在**未折叠**时接管容器布局。原生规则是 tab-group[collapsed] > .tab-group-container
+   { display: none }（含活动标签的组例外，用 flex 露出那一个），
+   之前这里写的是无条件 display:block !important，把折叠整个顶没了 ——
+   实测：collapsed 属性加上去了，容器还是 156px、4 个成员照常画在原来的行上，
+   于是「点收起没反应」并且后面的行被压在下面。 */
+.zen-workspace-normal-tabs-section > tab-group:not([collapsed]) > .tab-group-container {
   display: block !important;
   width: 100% !important;
   height: auto !important;
@@ -116,7 +121,32 @@
   overflow: visible !important;
 }
 
-.zen-workspace-normal-tabs-section > tab-group .tabbrowser-tab {
+/* 折叠但组里有当前标签时，原生用 flex 把那个标签露出来；这里只保证它别越出格子 */
+.zen-workspace-normal-tabs-section > tab-group[collapsed] > .tab-group-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 这个构建里**没人**负责折叠原生 tab-group：实测 collapsed 加上去了，
+   容器还是 156px、成员各 40px 照常排着（带活动标签的那组也一样）——
+   平台的折叠规则是给横向标签条写的（逐个成员收 max-width），
+   纵向 + display:contents 的组结构下完全不起作用。所以自己补上：
+   没有活动标签 → 整块收起来；有活动标签 → 只露那一个（Firefox 本意）。 */
+.zen-workspace-normal-tabs-section > tab-group[collapsed]:not([hasactivetab]) > .tab-group-container {
+  display: none !important;
+}
+
+.zen-workspace-normal-tabs-section > tab-group[collapsed][hasactivetab] > .tab-group-container > tab:not([selected]) {
+  display: none !important;
+}
+
+/* 成员标签的尺寸也只在未折叠时接管。
+   折叠动画是靠逐个成员收 max-width/max-height 实现的（tabgroup.js 的 collapsed setter
+   里那句注释就叫 "Unlock tab sizes"：tab.style.maxWidth = ""），
+   无条件写 height:36px !important + max-width:none !important 会把这套夹持顶掉，
+   实测：collapsed 属性加上了、成员还是 36px 高排在原处 —— 点收起完全没反应。 */
+.zen-workspace-normal-tabs-section > tab-group:not([collapsed]) .tabbrowser-tab {
   width: auto !important;
   min-width: 0 !important;
   max-width: none !important;
