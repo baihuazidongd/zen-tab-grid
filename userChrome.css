@@ -176,6 +176,27 @@
   max-width: none !important;
 }
 
+/* ---- 顶部不留空行：工作区标题行 + 空的固定标签区 ----
+   实测标签开始前那 147px 是这么花掉的：
+     38px  #zen-sidebar-top-buttons（侧栏折叠按钮，保留）
+      2px  .zen-essentials-container（没有 essentials 时只剩条边）
+     44px  .zen-current-workspace-indicator  ← 「Space」那一行
+     22px  .zen-workspace-pinned-tabs-section ← 没有固定标签时只剩一条分隔线
+     40px  新标签按钮行
+   工作区名字行点它只是折叠/展开工作区，切换工作区还有底部的「工作区」按钮，所以整行拿掉不丢功能。
+   固定标签区只在**真的什么都没有**时收掉；一旦出现固定标签或文件夹就照常显示。 */
+.zen-current-workspace-indicator {
+  display: none !important;
+}
+
+.zen-workspace-pinned-tabs-section:not(:has(> tab)):not(:has(> zen-folder)) {
+  display: none !important;
+}
+
+.zen-essentials-container:not(:has(> *)) {
+  display: none !important;
+}
+
 /* ---- 收起/展开状态兼容：侧栏折叠（图标模式）时不影响 ---- */
 /* 图标模式下标签区本身不可见，无需额外处理 */
 
