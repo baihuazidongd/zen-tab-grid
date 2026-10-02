@@ -14,6 +14,21 @@
   --uc-grid-columns: 2;
   --uc-tab-h: 36px;
   --uc-grid-gap: 4px;
+  /* 单列最小宽度：侧栏拖窄时（实测 186px 侧栏 → 每列只有 89px，标题没法看），
+     列宽不再继续被压，改成横向翻页多出一列。500px 默认宽度下不受影响（246 > 180）。 */
+  --uc-col-min: 180px;
+  /* 侧栏最宽能拖到多少：Zen 默认把 #navigator-toolbox 的 max-width 夹在
+     pref("zen.view.sidebar-expanded.max-width", 500) = 500px（1665px 窗口上正好三分之一）。
+     这里改成跟窗口走。想拖得更宽就写 70vw 或 1400px。 */
+  --uc-sidebar-max: 50vw;
+}
+
+/* ---- 侧栏可以拉到半个窗口 ----
+   Zen 在 ZenUIManager._updateMaxWidth() 里把 pref 的值写成 toolbox 的行内 max-width；
+   行内样式不带 !important，所以这里一条 !important 就能顶掉（实测：顶掉前设 830 只给 500，
+   顶掉后设 700 得 700、设 830 得 830，splitter 本身没有第二道夹限）。 */
+#navigator-toolbox {
+  max-width: var(--uc-sidebar-max) !important;
 }
 
 /* ---- 让标签滚动区纵向撑满侧栏 ----
@@ -39,7 +54,7 @@
   display: grid !important;
   grid-auto-flow: column !important;
   grid-template-rows: repeat(var(--uc-grid-rows), var(--uc-tab-h)) !important;
-  grid-auto-columns: calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns)) !important;
+  grid-auto-columns: max(var(--uc-col-min), calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns))) !important;
   gap: var(--uc-grid-gap) !important;
   align-content: start !important;
   justify-content: start !important;
