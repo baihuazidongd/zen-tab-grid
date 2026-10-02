@@ -66,16 +66,40 @@
     }
     for (const t of gBrowser.tabs) if (!inGrid.has(t)) t.classList.remove(DROP);
 
-    /* 原生标签组（文件夹）在网格里：tab-group 本身是 display:contents，网格项目其实是它的
-     * 「标题行」+「子标签容器」两块，所以 span 要写在容器上（写在组上被忽略，实测踩过）。 */
-    for (const g of document.querySelectorAll(".zen-workspace-normal-tabs-section > tab-group")) {
-      const n = (g.tabs || []).filter(t => t.visible !== false).length;
-      const cont = g.querySelector(":scope > .tab-group-container");
-      if (!cont) continue;
-      const want = "span " + Math.max(1, g.collapsed ? 1 : n);
+    /* 文件夹要跨几行：按成员**真实排出来的下边缘**算，不按成员数、也不按容器高度。
+     * 容器高度是循环定义：它是网格项目，盒子被轨道拉成 36px（align-self 默认 stretch），
+     * 拿它反推行数会永远算出 span 1 —— 实测这样会把 4 个成员的组压成一行，标题叠在成员上。
+     * 成员是块级流式排布，overflow:visible 时位置正常，所以量「最后一个成员的下边 - 容器上边」。 */
+    const root = getComputedStyle(document.documentElement);
+    const rowH = parseFloat(root.getPropertyValue("--uc-tab-h")) || 36;
+    const gap = parseFloat(root.getPropertyValue("--uc-grid-gap")) || 4;
+    for (const cont of document.querySelectorAll(".zen-workspace-normal-tabs-section > tab-group > .tab-group-container")) {
+      const g = cont.parentElement;
+      let h = 0;
+      if (!g.collapsed) {
+        const top = cont.getBoundingClientRect().top;
+        let bottom = top;
+        for (const kid of cont.children) {
+          const kb = kid.getBoundingClientRect();
+          if (kb.height > 0 && kb.bottom > bottom) bottom = kb.bottom;
+        }
+        h = bottom - top;
+      }
+      const rows = Math.max(1, Math.round((h + gap) / (rowH + gap)));
+      const want = "span " + rows;
       if (cont.style.gridRow !== want) cont.style.gridRow = want;
+      /* 观察容器 + 每个成员：容器的盒子被轨道拉伸，成员变高时它的尺寸可以完全不变，
+       * 只观察容器就收不到通知（1 秒轮询是兜底，不是主路径）。 */
+      if (ro) {
+        for (const el of [cont, ...cont.children]) {
+          if (!seenContainers.has(el)) { seenContainers.add(el); ro.observe(el); }
+        }
+      }
     }
   }
+
+  const seenContainers = new WeakSet();
+  const ro = "ResizeObserver" in window ? new ResizeObserver(() => sync()) : null;
 
   function init() {
     if (!window.gBrowser || !gBrowser.tabContainer) {
@@ -85,7 +109,7 @@
     const tc = gBrowser.tabContainer;
     ["TabOpen", "TabClose", "TabMove", "SSTabRestored"].forEach((ev) => tc.addEventListener(ev, sync));
     new MutationObserver(sync).observe(document.documentElement, {
-      subtree: true, childList: true, attributes: true, attributeFilter: ["group", "pinned", "zen-essential", "hidden"]
+      subtree: true, childList: true, attributes: true, attributeFilter: ["group", "pinned", "zen-essential", "hidden", "collapsed"]
     });
     setInterval(sync, 1000);
     sync();
