@@ -85,7 +85,10 @@
         }
         h = bottom - top;
       }
-      const rows = Math.max(1, Math.round((h + gap) / (rowH + gap)));
+      /* N 行轨道的高度是 N*rowH + (N-1)*gap，要 ≥ 内容高度 h → N ≥ (h+gap)/(rowH+gap)。
+       * 用 ceil 不是 round：内容 160px、四行只有 156px 时 round 给 4，差的 4px 正好把
+       * 最后一个成员压到下一行标题上（实测折叠态成员是 40px 而非 36px）。 */
+      const rows = Math.max(1, Math.ceil((h + gap) / (rowH + gap)));
       const want = "span " + rows;
       if (cont.style.gridRow !== want) cont.style.gridRow = want;
       /* 观察容器 + 每个成员：容器的盒子被轨道拉伸，成员变高时它的尺寸可以完全不变，
