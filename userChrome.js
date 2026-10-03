@@ -153,6 +153,110 @@
   init();
 })();
 
+/* ---- 标签宽度：右键菜单里直接选，不用改文件重启 ----
+ * CSS 那边 grid-auto-columns 读的是 var(--uc-tab-w, <按列数均分>)，
+ * 所以这里只要往根元素上写/删这一个变量就够了；选中的值存进 pref
+ * browser.zen.uc.tabWidth（0 = 按列数均分），重启后自动恢复。 */
+(() => {
+  if (window.__zenTabWidth) return;
+  window.__zenTabWidth = true;
+
+  const PREF = "browser.zen.uc.tabWidth";
+  const PRESETS = [160, 200, 240, 280, 340, 420];
+  const MIN = 80, MAX = 1200;
+
+  function saved() {
+    try { return Services.prefs.getIntPref(PREF, 0); } catch (e) { return 0; }
+  }
+  function apply(px) {
+    const root = document.documentElement;
+    if (px > 0) root.style.setProperty("--uc-tab-w", px + "px");
+    else root.style.removeProperty("--uc-tab-w");
+  }
+  function set(px) {
+    try { Services.prefs.setIntPref(PREF, px); } catch (e) {}
+    apply(px);
+  }
+
+  function buildMenu(win) {
+    const menu = win.document.getElementById("tabContextMenu");
+    if (!menu || win.document.getElementById("uc-menu-width")) return;
+    const doc = win.document;
+    const sep = doc.createXULElement("menuseparator");
+    menu.appendChild(sep);
+    const top = doc.createXULElement("menu");
+    top.id = "uc-menu-width";
+    top.label = "↔ 标签宽度";
+    const pop = doc.createXULElement("menupopup");
+    top.appendChild(pop);
+
+    const mkItem = (id, label, value) => {
+      const it = doc.createXULElement("menuitem");
+      it.id = id;
+      it.setAttribute("uc-value", String(value));
+      it.label = label;
+      it.addEventListener("command", () => { set(value); flashWidth(win, value); });
+      pop.appendChild(it);
+      return it;
+    };
+    mkItem("uc-w-auto", "按列数均分（默认）", 0);
+    pop.appendChild(doc.createXULElement("menuseparator"));
+    for (const px of PRESETS) mkItem("uc-w-" + px, px + " px", px);
+    pop.appendChild(doc.createXULElement("menuseparator"));
+    const custom = doc.createXULElement("menuitem");
+    custom.id = "uc-w-custom";
+    custom.label = "自定义…";
+    custom.addEventListener("command", () => {
+      const start = saved() || 240;
+      let val = { value: String(start) };
+      const ok = Services.prompt.prompt(win, "标签宽度", "输入像素（" + MIN + "–" + MAX + "）：", val, null, val);
+      if (!ok) return;
+      const n = Math.floor(Number(val.value));
+      if (!Number.isFinite(n) || n < MIN || n > MAX) {
+        Services.prompt.alert(win, "标签宽度", "请输入 " + MIN + "–" + MAX + " 之间的数字。");
+        return;
+      }
+      set(n);
+      flashWidth(win, n);
+    });
+    pop.appendChild(custom);
+
+    /* 每次打开子菜单时重新打勾，免得存多份状态对不上 */
+    pop.addEventListener("popupshowing", () => {
+      const cur = saved();
+      for (const it of [...pop.children]) {
+        if (it.tagName !== "menuitem" || !it.hasAttribute("uc-value")) continue;
+        const on = Number(it.getAttribute("uc-value")) === cur;
+        it.setAttribute("checked", on ? "true" : "false");
+        it.toggleAttribute("checked", on);
+      }
+    });
+    menu.appendChild(top);
+  }
+
+  function flashWidth(win, px) {
+    let t = win.document.getElementById("uc-toast");
+    if (!t) {
+      t = win.document.createXULElement("hbox");
+      t.id = "uc-toast";
+      (win.document.getElementById("browser") || win.document.documentElement).appendChild(t);
+    }
+    t.textContent = px > 0 ? "标签宽度 " + px + "px" : "标签宽度：按列数均分";
+    t.setAttribute("showing", "true");
+    clearTimeout(t._ucTimer);
+    t._ucTimer = setTimeout(() => t.removeAttribute("showing"), 2200);
+  }
+
+  window.ucTabWidth = { set, apply, saved };
+
+  function init() {
+    if (!window.gBrowser) { setTimeout(init, 200); return; }
+    apply(saved());
+    buildMenu(window);
+  }
+  init();
+})();
+
 /* ---- 一键整理成文件夹 ----
  * 两个入口都放在标签右键菜单里：
  *   按网站   —— 同一个 eTLD+1 有 ≥2 个标签就收进一个文件夹（确定性，永远能用）

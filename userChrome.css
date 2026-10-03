@@ -21,6 +21,9 @@
      pref("zen.view.sidebar-expanded.max-width", 500) = 500px（1665px 窗口上正好三分之一）。
      这里改成跟窗口走。想拖得更宽就写 70vw 或 1400px。 */
   --uc-sidebar-max: 50vw;
+  /* 标签宽度直接按像素定：写 --uc-tab-w: 240px 就固定 240，每排几列由侧栏宽度算出来，
+     放不下的列走横向翻页。默认**不定义**这个变量 = 沿用 --uc-grid-columns 均分。
+     标签右键菜单「↔ 标签宽度」就是运行时改这个变量（写进 pref，重启后保持）。 */
 }
 
 /* ---- 侧栏可以拉到半个窗口 ----
@@ -54,7 +57,8 @@
   display: grid !important;
   grid-auto-flow: column !important;
   grid-template-rows: repeat(var(--uc-grid-rows), var(--uc-tab-h)) !important;
-  grid-auto-columns: max(var(--uc-col-min), calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns))) !important;
+  /* --uc-tab-w 未定义时用括号里那串（按列数均分，且不低于 --uc-col-min） */
+  grid-auto-columns: var(--uc-tab-w, max(var(--uc-col-min), calc((100% - (var(--uc-grid-columns) - 1) * var(--uc-grid-gap)) / var(--uc-grid-columns)))) !important;
   gap: var(--uc-grid-gap) !important;
   align-content: start !important;
   justify-content: start !important;
